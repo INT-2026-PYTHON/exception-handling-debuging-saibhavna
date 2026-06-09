@@ -137,3 +137,67 @@ Explanation:
 =================================================
 
 """
+
+def process_records(records):
+    clean_records = []
+    error_log = []
+    for index, record in enumerate(records):
+        try:
+            name = record["name"]
+            raw_age = record["age"]
+            raw_score = record["score"]
+            
+            age = int(raw_age)
+            score = float(raw_score)
+            
+        except (KeyError, TypeError) as e:
+            error_class_name = type(e).__name__
+            error_log.append((index, error_class_name, str(e)))
+            
+        except ValueError as e:
+            error_class_name = type(e).__name__
+            error_log.append((index, error_class_name, str(e)))
+            
+        else:
+            clean_record = {
+                "name": name,
+                "age": age,
+                "score": score
+            }
+            clean_records.append(clean_record)
+            
+    return clean_records, error_log
+
+
+def process_strict(records):
+
+    clean_records, error_log = process_records(records)
+    
+    if len(error_log) > 0:
+        failures_count = len(error_log)
+        raise RuntimeError(f"Processing failed with {failures_count} error(s).") from None
+        
+    return clean_records, error_log
+
+if __name__ == "__main__":
+    sample_data = [
+        {"name": "Alice", "age": "25", "score": "95.5"},      
+        {"name": "Bob", "age": "not_a_number", "score": "80"}, 
+        {"name": "Charlie", "score": "90.0"},                 
+        "Not a dictionary",                                  
+        {"name": "David", "age": "30", "score": "88.2"}       
+    ]
+
+    print("--- Testing process_records() ---")
+    clean_data, errors = process_records(sample_data)
+    
+    print("Cleaned Records:")
+    print(clean_data)
+    print("\nError Log:")
+    print(errors)
+
+    print("\n--- Testing process_strict() ---")
+    try:
+        process_strict(sample_data)
+    except RuntimeError as e:
+        print(f"Successfully caught strict exception: {e}")
